@@ -1,0 +1,643 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="theme-color" content="#c0392b">
+<link rel="manifest" href="manifest.json">
+<title>RW Cup Quoter 2026 v2</title>
+<style>
+:root{
+  --clr:#c0392b;--clr2:#a93226;--bg:#f8f9fa;--card:#fff;--border:#dadce0;
+  --text:#202124;--sub:#5f6368;--price-bg:#fdf2f2;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+body{font-family:'Segoe UI',Arial,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;}
+
+.topbar{background:var(--clr);color:#fff;padding:12px 16px;display:flex;align-items:center;gap:10px;position:sticky;top:0;z-index:100;box-shadow:0 2px 6px rgba(0,0,0,.3);}
+.topbar-icon{font-size:22px;}
+.topbar h1{font-size:17px;font-weight:600;flex:1;}
+.topbar-reset{background:rgba(255,255,255,.2);border:none;color:#fff;padding:6px 12px;border-radius:20px;font-size:13px;cursor:pointer;}
+.topbar-reset:active{background:rgba(255,255,255,.35);}
+
+.tabs{display:flex;background:#fff;border-bottom:2px solid var(--border);position:sticky;top:52px;z-index:99;}
+.tab{flex:1;padding:10px 4px;text-align:center;font-size:13px;font-weight:500;color:var(--sub);cursor:pointer;border-bottom:3px solid transparent;transition:.2s;}
+.tab.active{color:var(--clr);border-bottom-color:var(--clr);}
+
+.page{display:none;padding:12px;max-width:600px;margin:0 auto;}
+.page.active{display:block;}
+
+.card{background:var(--card);border-radius:12px;padding:14px;margin-bottom:12px;box-shadow:0 1px 3px rgba(0,0,0,.1);}
+.card-title{font-size:12px;font-weight:600;color:var(--sub);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px;}
+
+.sku-select{width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:15px;background:#fff;color:var(--text);appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M0 0l6 8 6-8z' fill='%235f6368'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;}
+.sku-dims{font-size:12px;color:var(--sub);margin-top:5px;padding:0 2px;}
+
+.param-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.param-item{background:#f1f3f4;border-radius:10px;padding:10px 12px;}
+.param-label{font-size:11px;color:var(--sub);margin-bottom:4px;font-weight:500;}
+.param-controls{display:flex;align-items:center;gap:6px;}
+.param-btn{width:32px;height:32px;border-radius:50%;border:1.5px solid var(--clr);background:#fff;color:var(--clr);font-size:18px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;font-weight:600;flex-shrink:0;}
+.param-btn:active{background:var(--price-bg);}
+.param-val{flex:1;text-align:center;font-size:15px;font-weight:600;color:var(--text);background:none;border:none;width:100%;outline:none;}
+input[type=number].param-val::-webkit-inner-spin-button,
+input[type=number].param-val::-webkit-outer-spin-button{-webkit-appearance:none;}
+
+.gsm-row{display:flex;align-items:center;gap:8px;background:#f1f3f4;border-radius:8px;padding:7px 10px;margin-top:6px;}
+.gsm-name{font-size:12px;font-weight:500;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.gsm-orig{font-size:11px;color:var(--sub);flex-shrink:0;}
+.gsm-btn{width:28px;height:28px;border-radius:50%;border:1.5px solid var(--clr);background:#fff;color:var(--clr);font-size:15px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-weight:600;flex-shrink:0;}
+.gsm-btn:active{background:var(--price-bg);}
+.gsm-val{width:48px;text-align:center;font-size:14px;font-weight:600;border:none;background:none;outline:none;}
+.gsm-delta{font-size:12px;min-width:34px;text-align:right;font-weight:500;}
+.gsm-delta.plus{color:#d93025;}
+.gsm-delta.minus{color:#0f9d58;}
+
+.toggle-list{display:flex;flex-direction:column;gap:8px;}
+.toggle-row{display:flex;align-items:center;justify-content:space-between;gap:8px;}
+.toggle-label{font-size:14px;flex:1;}
+.toggle-note{font-size:11px;color:var(--sub);}
+.toggle-switch{position:relative;width:44px;height:24px;flex-shrink:0;}
+.toggle-switch input{display:none;}
+.toggle-slider{position:absolute;inset:0;border-radius:24px;background:#ccc;cursor:pointer;transition:.3s;}
+.toggle-slider::before{content:'';position:absolute;width:18px;height:18px;border-radius:50%;background:#fff;left:3px;top:3px;transition:.3s;}
+.toggle-switch input:checked + .toggle-slider{background:var(--clr);}
+.toggle-switch input:checked + .toggle-slider::before{transform:translateX(20px);}
+
+.color-row{display:flex;align-items:center;gap:10px;}
+.color-label{font-size:14px;flex:1;}
+.color-ctrl{display:flex;align-items:center;gap:8px;}
+.color-count{font-size:15px;font-weight:600;min-width:24px;text-align:center;}
+
+.price-board{background:linear-gradient(135deg,#c0392b,#a93226);border-radius:14px;padding:16px;margin-bottom:12px;color:#fff;}
+.price-board-title{font-size:12px;opacity:.85;margin-bottom:12px;text-align:center;text-transform:uppercase;letter-spacing:.5px;}
+.price-cols{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.price-col{background:rgba(255,255,255,.15);border-radius:10px;padding:12px 10px;text-align:center;}
+.price-col-label{font-size:11px;opacity:.85;margin-bottom:6px;}
+.price-amount{font-size:34px;font-weight:800;line-height:1;letter-spacing:-.5px;}
+.price-unit{font-size:11px;opacity:.75;margin-top:3px;}
+.price-delta{font-size:12px;margin-top:5px;padding:2px 8px;border-radius:10px;display:inline-block;}
+.price-delta.up{background:rgba(255,80,80,.3);color:#ffcdd2;}
+.price-delta.down{background:rgba(80,230,130,.3);color:#c8e6c9;}
+.price-delta.zero{display:none;}
+
+.detail-table{width:100%;border-collapse:collapse;font-size:13px;}
+.detail-table tr{border-bottom:1px solid var(--border);}
+.detail-table tr:last-child{border-bottom:none;}
+.detail-table td{padding:7px 4px;}
+.detail-table td:last-child{text-align:right;font-weight:500;}
+
+.qty-table{width:100%;border-collapse:collapse;font-size:13px;margin-top:8px;}
+.qty-table tr{border-bottom:1px solid var(--border);}
+.qty-table tr:last-child{border-bottom:none;}
+.qty-table td{padding:7px 4px;}
+.qty-table td:last-child{text-align:right;font-weight:500;}
+
+.surcharge-pills{display:flex;flex-wrap:wrap;gap:5px;margin-top:8px;}
+.pill{padding:3px 8px;border-radius:10px;font-size:11px;font-weight:500;}
+.pill.active{background:var(--price-bg);color:var(--clr);}
+.pill.inactive{background:#f1f3f4;color:var(--sub);}
+
+.notes-list{list-style:none;padding:0;}
+.notes-list li{padding:8px 0;border-bottom:1px solid var(--border);font-size:13px;line-height:1.5;color:var(--sub);}
+.notes-list li:last-child{border-bottom:none;}
+.notes-list li b{color:var(--text);}
+
+.param-header{display:flex;justify-content:space-between;align-items:center;}
+.gsm-reset-btn{font-size:11px;color:var(--clr);background:none;border:none;cursor:pointer;padding:2px 6px;}
+
+@media(max-width:360px){
+  .price-amount{font-size:28px;}
+  .param-grid{grid-template-columns:1fr;}
+}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <span class="topbar-icon">☕</span>
+  <h1>RW Cup Quoter 2026 v2</h1>
+  <button class="topbar-reset" onclick="resetAll()">Reset</button>
+</div>
+
+<div class="tabs">
+  <div class="tab active" onclick="showTab(0)">Quote</div>
+  <div class="tab" onclick="showTab(1)">Detail</div>
+  <div class="tab" onclick="showTab(2)">Notes</div>
+</div>
+
+<!-- TAB 0: QUOTE -->
+<div class="page active" id="tab0">
+
+  <div class="card">
+    <div class="card-title">Select Item</div>
+    <select class="sku-select" id="skuSel" onchange="onSkuChange()"></select>
+    <div class="sku-dims" id="skuDims"></div>
+  </div>
+
+  <div class="price-board">
+    <div class="price-board-title">FOB Price / Carton (USD)</div>
+    <div class="price-cols">
+      <div class="price-col">
+        <div class="price-col-label">🖨 Printing Cups</div>
+        <div class="price-amount" id="pricePrint">—</div>
+        <div class="price-unit">USD / ctn</div>
+        <div class="price-delta" id="deltaPrint"></div>
+      </div>
+      <div class="price-col">
+        <div class="price-col-label">📦 Kraft Cups</div>
+        <div class="price-amount" id="priceWhite">—</div>
+        <div class="price-unit">USD / ctn</div>
+        <div class="price-delta" id="deltaWhite"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Global Parameters</div>
+    <div class="param-grid" id="paramGrid"></div>
+    <!-- GSM rows for selected SKU -->
+    <div class="param-header" style="margin-top:12px;">
+      <div class="card-title" style="margin-bottom:0;" id="gsmSkLabel">GSM Adjustments</div>
+      <button class="gsm-reset-btn" onclick="resetCurrentGSM()">Reset</button>
+    </div>
+    <div id="singleGSMRow"></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Options</div>
+    <div class="toggle-list">
+      <div class="toggle-row">
+        <div>
+          <div class="toggle-label">White Carton</div>
+          <div class="toggle-note">+$0.10 / ctn</div>
+        </div>
+        <label class="toggle-switch">
+          <input type="checkbox" id="togWhite" onchange="recalc()">
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+      <div class="toggle-row">
+        <div>
+          <div class="toggle-label">20GP (vs 40HQ)</div>
+          <div class="toggle-note" id="note20gp">Surcharge varies by size</div>
+        </div>
+        <label class="toggle-switch">
+          <input type="checkbox" id="tog20gp" onchange="recalc()">
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+      <div class="toggle-row">
+        <div>
+          <div class="toggle-label">Extra Print Color</div>
+          <div class="toggle-note" id="noteColor">+$0.10~0.20 per extra color</div>
+        </div>
+        <label class="toggle-switch">
+          <input type="checkbox" id="togColor" onchange="onColorToggle()">
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+      <div id="colorCountRow" style="display:none;" class="toggle-row">
+        <div class="color-label" style="font-size:13px;color:var(--sub)">Extra colors (beyond 3)</div>
+        <div class="color-ctrl">
+          <button class="param-btn" onclick="changeColor(-1)">−</button>
+          <div class="color-count" id="colorCount">1</div>
+          <button class="param-btn" onclick="changeColor(1)">+</button>
+        </div>
+      </div>
+    </div>
+    <div class="surcharge-pills" id="pillRow"></div>
+  </div>
+
+</div>
+
+<!-- TAB 1: COST DETAIL -->
+<div class="page" id="tab1">
+  <div class="card">
+    <div class="card-title">Cost Breakdown (RMB / ctn)</div>
+    <table class="detail-table" id="costTable"></table>
+  </div>
+  <div class="card">
+    <div class="card-title">Container Quantity</div>
+    <table class="qty-table" id="qtyTable"></table>
+  </div>
+</div>
+
+<!-- TAB 2: NOTES -->
+<div class="page" id="tab2">
+  <div class="card">
+    <div class="card-title">Pricing Notes</div>
+    <ul class="notes-list">
+      <li><b>Packing:</b> Base on yellow carton. White carton: <b>+US$0.10/ctn</b></li>
+      <li><b>Container:</b> Base on 40HQ. If 20GP: 4oz <b>+$0.20</b> / 8oz <b>+$0.40</b> / 10-22oz <b>+$0.50</b> /ctn</li>
+      <li><b>Printing:</b> Base on 1-3 colors. Extra color: 4-8oz <b>+$0.10</b> / 10-22oz <b>+$0.20</b> /ctn</li>
+      <li><b>Innercup GSM:</b> ±10 gsm per step. Inner liner paper. Affects base paper cost by ratio.</li>
+      <li><b>Print GSM:</b> ±1 gsm per step. Print coating layer. Affects only printing cup cost.</li>
+      <li><b>Kraft GSM:</b> ±1 gsm per step. Kraft ripple layer. Affects both cup costs by ratio.</li>
+      <li><b>Fan/Bottom price:</b> RMB per ton. Affects paper cost directly.</li>
+      <li><b>All Items:</b> 500 pcs / ctn</li>
+    </ul>
+  </div>
+  <div class="card">
+    <div class="card-title">Formula</div>
+    <ul class="notes-list">
+      <li>Base paper (Innercup+Bottom) = cp0 × (Fan×IcGSM×IcArea + Bottom×BgGSM×BtArea) / origBaseMetric</li>
+      <li>Kraft layer cost = kfCost0 × (Fan×newKfGSM) / (6400×origKfGSM)</li>
+      <li>Print layer cost = prCost0 × (Fan×newPrGSM) / (6400×origPrGSM)</li>
+      <li>Paper(Kraft) = Base + Kraft layer &nbsp;|&nbsp; Paper(Print) = Base + Kraft + Print layers</li>
+      <li>Cost = Paper + Cut + Form-Pack + Depre + PumpE/Qty</li>
+      <li>Price = Cost / ExRate + Margin / (Qty × ExRate)</li>
+    </ul>
+  </div>
+  <div class="card" style="text-align:center;padding:18px;">
+    <div style="font-size:13px;color:var(--sub)">Juxian Hengyu Flying Dragon Industry</div>
+    <div style="font-size:12px;color:var(--sub);margin-top:4px;">RW Cup Quoter v2.0 · 2026 · ExRate 6.75</div>
+  </div>
+</div>
+
+<script>
+// ─── SKU DATA ─────────────────────────────────────────────────────────────────
+// Precomputed from RW paper cup Quoter.xls
+// cp0=G(base paper innercup+bottom), prCost0=print layer RMB, kfCost0=kraft layer RMB
+// G_metric=6400*ic*ki+6800*bg*kb, ki=innercup area, kb=bottom area
+var SKUS = [
+  {n:"4ozA", d:[62,46,62],   ic:210, pr:15.0,  kf:13.75, bg:190, cp0:12.760597, cut:0.172577, fp:13.918029, depre0:1.968846, q20:779, q40:1885, prCost0:1.2500, kfCost0:13.7501, G_metric:16283440210, ki:10518, kb:1662, oz:4},
+  {n:"8ozA", d:[80,57,90],   ic:280, pr:25.0,  kf:20.0,  bg:210, cp0:27.332641, cut:0.216189, fp:17.284543, depre0:4.231456, q20:430, q40:1041, prCost0:5.0000, kfCost0:20.0003, G_metric:38351221655, ki:19368, kb:2552, oz:8},
+  {n:"10ozA",d:[90,60,95],   ic:320, pr:30.0,  kf:25.0,  bg:210, cp0:36.503551, cut:0.295213, fp:18.362333, depre0:5.657594, q20:408, q40:989,  prCost0:5.0000, kfCost0:25.0003, G_metric:49879694880, ki:22384, kb:2827, oz:10},
+  {n:"12ozA",d:[90,60,110],  ic:320, pr:35.0,  kf:27.5,  bg:210, cp0:40.357438, cut:0.358955, fp:19.583333, depre0:6.259763, q20:335, q40:811,  prCost0:7.5000, kfCost0:27.5005, G_metric:57117924353, ki:25918, kb:2827, oz:12},
+  {n:"16ozA",d:[90,60,136],  ic:320, pr:45.0,  kf:32.5,  bg:210, cp0:46.863047, cut:0.425027, fp:22.468667, depre0:7.276265, q20:289, q40:699,  prCost0:12.5000,kfCost0:32.5001, G_metric:69664188775, ki:32044, kb:2827, oz:16},
+  {n:"22ozA",d:[90,60,136],  ic:320, pr:60.0,  kf:45.0,  bg:210, cp0:57.347832, cut:0.968816, fp:26.275000, depre0:8.810849, q20:223, q40:541,  prCost0:15.0000,kfCost0:45.0025, G_metric:69664188775, ki:32044, kb:2827, oz:22}
+];
+
+// ─── STATE ────────────────────────────────────────────────────────────────────
+var state = {
+  fan: 6400, bottom: 6800, exrate: 6.75, margin: 10000, depre: 1.0, pumpe: 1580,
+  skuIdx: 0,
+  innerGSMDeltas: new Array(SKUS.length).fill(0),
+  printGSMDeltas: new Array(SKUS.length).fill(0),
+  kraftGSMDeltas: new Array(SKUS.length).fill(0),
+  extraColors: 1,
+};
+
+var PARAMS = [
+  {key:'fan',   label:'Fan ¥/t',   step:50,  decimals:0, min:1000, max:30000},
+  {key:'bottom',label:'Bottom ¥/t',step:50,  decimals:0, min:1000, max:30000},
+  {key:'exrate',label:'ExRate',    step:0.05,decimals:2, min:1,    max:20},
+  {key:'margin',label:'Margin ¥',  step:1000,decimals:0, min:0,    max:200000},
+  {key:'depre', label:'Depre',     step:0.1, decimals:1, min:0,    max:10},
+];
+
+// ─── TAB SWITCH ───────────────────────────────────────────────────────────────
+function showTab(idx){
+  document.querySelectorAll('.tab').forEach(function(t,i){t.classList.toggle('active',i===idx);});
+  document.querySelectorAll('.page').forEach(function(p,i){p.classList.toggle('active',i===idx);});
+}
+
+// ─── INIT ─────────────────────────────────────────────────────────────────────
+window.onload = function(){
+  buildSkuSelect();
+  buildParamGrid();
+  buildSingleGSMRow();
+  onSkuChange();
+  if('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js');
+};
+
+function buildSkuSelect(){
+  var sel = document.getElementById('skuSel');
+  sel.innerHTML = '';
+  SKUS.forEach(function(s,i){
+    var opt = document.createElement('option');
+    opt.value = i;
+    opt.textContent = s.n + '  (' + s.d[0]+'\u00d7'+s.d[1]+'\u00d7'+s.d[2]+' mm)';
+    sel.appendChild(opt);
+  });
+}
+
+function buildParamGrid(){
+  var grid = document.getElementById('paramGrid');
+  grid.innerHTML = '';
+  PARAMS.forEach(function(p){
+    var item = document.createElement('div');
+    item.className = 'param-item';
+    item.innerHTML =
+      '<div class="param-label">'+p.label+'</div>'+
+      '<div class="param-controls">'+
+        '<button class="param-btn" onclick="changeParam(\''+p.key+'\',-1)">\u2212</button>'+
+        '<input type="number" class="param-val" id="pv_'+p.key+'"'+
+          ' value="'+state[p.key]+'"'+
+          ' step="'+p.step+'" min="'+p.min+'" max="'+p.max+'"'+
+          ' onchange="onParamInput(\''+p.key+'\',this.value)">'+
+        '<button class="param-btn" onclick="changeParam(\''+p.key+'\',1)">+</button>'+
+      '</div>';
+    grid.appendChild(item);
+  });
+}
+
+function buildSingleGSMRow(){
+  document.getElementById('singleGSMRow').innerHTML = '<div id="gsmRowsContainer" style="display:none;"></div>';
+}
+
+function updateSingleGSMRow(){
+  var idx = state.skuIdx;
+  var s = SKUS[idx];
+  var ni = s.ic + state.innerGSMDeltas[idx];
+  var np = s.pr + state.printGSMDeltas[idx];
+  var nk = s.kf + state.kraftGSMDeltas[idx];
+  var di = state.innerGSMDeltas[idx];
+  var dp = state.printGSMDeltas[idx];
+  var dkf = state.kraftGSMDeltas[idx];
+
+  document.getElementById('gsmSkLabel').textContent = 'GSM \u2014 ' + s.n;
+  var cont = document.getElementById('gsmRowsContainer');
+  cont.style.display = 'block';
+
+  cont.innerHTML =
+    '<div class="gsm-row">'+
+      '<div class="gsm-name">Innercup</div>'+
+      '<div class="gsm-orig">orig:'+s.ic+'</div>'+
+      '<button class="gsm-btn" onclick="changeGSM(\'inner\',-10)">\u2212</button>'+
+      '<input type="number" class="gsm-val" id="gsmv_inner" value="'+ni+'" onchange="onGSMInput(\'inner\',this.value)">'+
+      '<button class="gsm-btn" onclick="changeGSM(\'inner\',10)">+</button>'+
+      '<div class="gsm-delta'+(di>0?' plus':di<0?' minus':'')+'" id="gsmd_inner">'+(di===0?'\u2014':(di>0?'+':'')+di)+'</div>'+
+    '</div>'+
+    '<div class="gsm-row">'+
+      '<div class="gsm-name">Print</div>'+
+      '<div class="gsm-orig">orig:'+s.pr+'</div>'+
+      '<button class="gsm-btn" onclick="changeGSM(\'print\',-1)">\u2212</button>'+
+      '<input type="number" class="gsm-val" id="gsmv_print" value="'+np+'" onchange="onGSMInput(\'print\',this.value)">'+
+      '<button class="gsm-btn" onclick="changeGSM(\'print\',1)">+</button>'+
+      '<div class="gsm-delta'+(dp>0?' plus':dp<0?' minus':'')+'" id="gsmd_print">'+(dp===0?'\u2014':(dp>0?'+':'')+dp)+'</div>'+
+    '</div>'+
+    '<div class="gsm-row">'+
+      '<div class="gsm-name">Kraft</div>'+
+      '<div class="gsm-orig">orig:'+s.kf+'</div>'+
+      '<button class="gsm-btn" onclick="changeGSM(\'kraft\',-1)">\u2212</button>'+
+      '<input type="number" class="gsm-val" id="gsmv_kraft" value="'+nk+'" onchange="onGSMInput(\'kraft\',this.value)">'+
+      '<button class="gsm-btn" onclick="changeGSM(\'kraft\',1)">+</button>'+
+      '<div class="gsm-delta'+(dkf>0?' plus':dkf<0?' minus':'')+'" id="gsmd_kraft">'+(dkf===0?'\u2014':(dkf>0?'+':'')+dkf)+'</div>'+
+    '</div>';
+}
+
+// ─── EVENTS ───────────────────────────────────────────────────────────────────
+function onSkuChange(){
+  state.skuIdx = parseInt(document.getElementById('skuSel').value);
+  var s = SKUS[state.skuIdx];
+  document.getElementById('skuDims').textContent =
+    'Dims: '+s.d[0]+'\u00d7'+s.d[1]+'\u00d7'+s.d[2]+' mm  |  Innercup: '+s.ic+'  |  Print: '+s.pr+'  |  Kraft: '+s.kf+'  |  Bottom: '+s.bg+'  |  500 pcs/ctn';
+  update20GPNote();
+  updateColorNote();
+  updateSingleGSMRow();
+  recalc();
+}
+
+function changeParam(key, dir){
+  var p = PARAMS.find(function(x){return x.key===key;});
+  var val = state[key] + dir * p.step;
+  val = Math.max(p.min, Math.min(p.max, parseFloat(val.toFixed(p.decimals+2))));
+  state[key] = parseFloat(val.toFixed(p.decimals));
+  document.getElementById('pv_'+key).value = state[key];
+  recalc();
+}
+
+function onParamInput(key, rawVal){
+  var p = PARAMS.find(function(x){return x.key===key;});
+  var val = parseFloat(rawVal);
+  if(isNaN(val)) return;
+  val = Math.max(p.min, Math.min(p.max, val));
+  state[key] = parseFloat(val.toFixed(p.decimals));
+  document.getElementById('pv_'+key).value = state[key];
+  recalc();
+}
+
+function changeGSM(type, delta){
+  var i = state.skuIdx;
+  var s = SKUS[i];
+  var arr;
+  var orig;
+  if(type === 'inner'){ arr = state.innerGSMDeltas; orig = s.ic; }
+  else if(type === 'print'){ arr = state.printGSMDeltas; orig = s.pr; }
+  else{ arr = state.kraftGSMDeltas; orig = s.kf; }
+  var n = orig + arr[i] + delta;
+  if(n < 1 || n > 600) return;
+  arr[i] += delta;
+  updateSingleGSMRow();
+  recalc();
+}
+
+function onGSMInput(type, rawVal){
+  var i = state.skuIdx;
+  var s = SKUS[i];
+  var arr, orig;
+  if(type === 'inner'){ arr = state.innerGSMDeltas; orig = s.ic; }
+  else if(type === 'print'){ arr = state.printGSMDeltas; orig = s.pr; }
+  else{ arr = state.kraftGSMDeltas; orig = s.kf; }
+  var val = parseInt(rawVal);
+  if(isNaN(val)) return;
+  val = Math.max(1, Math.min(600, val));
+  arr[i] = val - orig;
+  updateSingleGSMRow();
+  recalc();
+}
+
+function resetCurrentGSM(){
+  var i = state.skuIdx;
+  state.innerGSMDeltas[i] = 0;
+  state.printGSMDeltas[i] = 0;
+  state.kraftGSMDeltas[i] = 0;
+  updateSingleGSMRow();
+  recalc();
+}
+
+function onColorToggle(){
+  document.getElementById('colorCountRow').style.display = document.getElementById('togColor').checked ? 'flex' : 'none';
+  recalc();
+}
+
+function changeColor(dir){
+  state.extraColors = Math.max(1, Math.min(10, state.extraColors + dir));
+  document.getElementById('colorCount').textContent = state.extraColors;
+  recalc();
+}
+
+function update20GPNote(){
+  var s = SKUS[state.skuIdx];
+  var add = calc20GPSurcharge(s.oz);
+  document.getElementById('note20gp').textContent = '+$'+add.toFixed(2)+'/ctn for '+s.n;
+}
+
+function updateColorNote(){
+  var s = SKUS[state.skuIdx];
+  var rate = getColorRate(s.oz);
+  document.getElementById('noteColor').textContent = '+$'+rate.toFixed(2)+' per extra color/ctn';
+}
+
+function calc20GPSurcharge(oz){
+  if(oz <= 4) return 0.2;
+  if(oz <= 8) return 0.4;
+  return 0.5;
+}
+
+function getColorRate(oz){
+  return oz <= 8 ? 0.10 : 0.20;
+}
+
+// ─── CALCULATE ────────────────────────────────────────────────────────────────
+function recalc(){
+  var idx = state.skuIdx;
+  var s = SKUS[idx];
+  var fan = state.fan, bottom = state.bottom;
+  var exrate = state.exrate, margin = state.margin, depre = state.depre, pumpe = state.pumpe;
+  var icGSM = s.ic + state.innerGSMDeltas[idx];
+  var prGSM = s.pr + state.printGSMDeltas[idx];
+  var kfGSM = s.kf + state.kraftGSMDeltas[idx];
+
+  // ── Base paper cost (Innercup + Bottom) via ratio ──
+  var newBaseMetric = fan * icGSM * s.ki + bottom * s.bg * s.kb;
+  var basePaperCost = s.cp0 * (newBaseMetric / s.G_metric);
+
+  // ── Kraft layer cost via ratio ──
+  var kraftRatio = (fan * kfGSM) / (6400 * s.kf);
+  var kraftLayerCost = s.kfCost0 * kraftRatio;
+
+  // ── Print layer cost via ratio ──
+  var printRatio = (fan * prGSM) / (6400 * s.pr);
+  var printLayerCost = s.prCost0 * printRatio;
+
+  // ── Total paper costs ──
+  var costPaperPrint = basePaperCost + kraftLayerCost + printLayerCost;
+  var costPaperKraft = basePaperCost + kraftLayerCost;
+
+  var depreCtn = s.depre0 * depre;
+  var pumpCtn = pumpe / s.q40;
+
+  var costPrintRMB = costPaperPrint + s.cut + s.fp + depreCtn + pumpCtn;
+  var costKraftRMB = costPaperKraft + s.cut + s.fp + depreCtn + pumpCtn;
+
+  var marginCtn = margin / (s.q40 * exrate);
+
+  var basePrint = costPrintRMB / exrate + marginCtn;
+  var baseKraft = costKraftRMB / exrate + marginCtn;
+
+  // ── Surcharges ──
+  var whiteSurcharge = document.getElementById('togWhite').checked ? 0.1 : 0;
+  var gpSurcharge = document.getElementById('tog20gp').checked ? calc20GPSurcharge(s.oz) : 0;
+  var colorOn = document.getElementById('togColor').checked;
+  var colorSurcharge = colorOn ? state.extraColors * getColorRate(s.oz) : 0;
+  var totalSurcharge = whiteSurcharge + gpSurcharge + colorSurcharge;
+
+  var finalPrint = basePrint + totalSurcharge;
+  var finalKraft = baseKraft + totalSurcharge;
+
+  document.getElementById('pricePrint').textContent = finalPrint.toFixed(2);
+  document.getElementById('priceWhite').textContent = finalKraft.toFixed(2);
+
+  // ── Delta vs reference price (original spreadsheet: ExRate=6.75, Margin=10000, Depre=1.0) ──
+  // Compute reference prices inline
+  var refBaseMetric = 6400 * s.ic * s.ki + 6800 * s.bg * s.kb;
+  var refBase = s.cp0 * (refBaseMetric / s.G_metric); // = s.cp0
+  var refKraft = s.kfCost0;
+  var refPrint = s.prCost0;
+  var refPaperPrint = refBase + refKraft + refPrint;
+  var refPaperKraft = refBase + refKraft;
+  var refPump = 1580 / s.q40;
+  var refDepre = s.depre0 * 1.0;
+  var refCostPrint = refPaperPrint + s.cut + s.fp + refDepre + refPump;
+  var refCostKraft = refPaperKraft + s.cut + s.fp + refDepre + refPump;
+  var refMargCtn = 10000 / (s.q40 * 6.75);
+  var refPricePrint = refCostPrint / 6.75 + refMargCtn;
+  var refPriceKraft = refCostKraft / 6.75 + refMargCtn;
+
+  setDelta('deltaPrint', finalPrint - refPricePrint);
+  setDelta('deltaWhite', finalKraft - refPriceKraft);
+
+  // ── Cost detail table ──
+  var tbody = document.getElementById('costTable');
+  tbody.innerHTML = '';
+  var rows = [
+    ['Base Paper (Innercup+Bottom)', basePaperCost.toFixed(2)+' RMB'],
+    ['Kraft Layer Paper', kraftLayerCost.toFixed(2)+' RMB'],
+    ['Print Layer Paper', printLayerCost.toFixed(2)+' RMB'],
+    ['-- Paper Cost (Print)', costPaperPrint.toFixed(2)+' RMB'],
+    ['-- Paper Cost (Kraft)', costPaperKraft.toFixed(2)+' RMB'],
+    ['Cut', s.cut.toFixed(2)+' RMB'],
+    ['Form-Pack-Trans', s.fp.toFixed(2)+' RMB'],
+    ['Depreciation', depreCtn.toFixed(2)+' RMB'],
+    ['PumpE / ctn', pumpCtn.toFixed(2)+' RMB'],
+    ['== Print Cost / ctn (RMB)', costPrintRMB.toFixed(2)+' RMB'],
+    ['== Kraft Cost / ctn (RMB)', costKraftRMB.toFixed(2)+' RMB'],
+    ['Margin / ctn (USD)', '+$'+marginCtn.toFixed(4)],
+    ['Surcharges', totalSurcharge > 0 ? '+$'+totalSurcharge.toFixed(2) : '-'],
+  ];
+  rows.forEach(function(r){
+    var l=r[0],v=r[1];
+    var tr=document.createElement('tr');
+    if(l.indexOf('==')===0){tr.style.fontWeight='600';tr.style.color='#c0392b';}
+    if(l.indexOf('--')===0){tr.style.fontWeight='500';}
+    tr.innerHTML='<td>'+l.replace(/^[-=]+ /,'')+'</td><td>'+v+'</td>';
+    tbody.appendChild(tr);
+  });
+
+  // ── Pills ──
+  var pills = document.getElementById('pillRow');
+  pills.innerHTML = '';
+  var di = state.innerGSMDeltas[idx], dp = state.printGSMDeltas[idx], dkf = state.kraftGSMDeltas[idx];
+  var pillDefs = [
+    {label:'White Box', active: document.getElementById('togWhite').checked},
+    {label:'20GP', active: document.getElementById('tog20gp').checked},
+    {label: colorOn ? state.extraColors+' extra color'+(state.extraColors>1?'s':'') : 'Extra Color', active: colorOn},
+    {label:'Inner \u0394:'+(di>=0?'+':'')+di, active: di!==0},
+    {label:'Print \u0394:'+(dp>=0?'+':'')+dp, active: dp!==0},
+    {label:'Kraft \u0394:'+(dkf>=0?'+':'')+dkf, active: dkf!==0},
+  ];
+  pillDefs.forEach(function(p){
+    var span=document.createElement('span');
+    span.className='pill '+(p.active?'active':'inactive');
+    span.textContent=p.label;
+    pills.appendChild(span);
+  });
+
+  // ── Qty table ──
+  var qt = document.getElementById('qtyTable');
+  if(qt){
+    qt.innerHTML = '';
+    var qrows = [
+      ['40HQ', Math.round(s.q40)+' ctns'],
+      ['20GP', Math.round(s.q20)+' ctns'],
+      ['Pcs / Ctn', '500 pcs'],
+    ];
+    qrows.forEach(function(r){qt.innerHTML+='<tr><td>'+r[0]+'</td><td>'+r[1]+'</td></tr>';});
+  }
+
+  update20GPNote();
+}
+
+function setDelta(id, d){
+  var el = document.getElementById(id);
+  if(Math.abs(d) < 0.001){el.textContent='';el.className='price-delta zero';return;}
+  el.textContent = '\u0394 '+(d>0?'+':'')+d.toFixed(2);
+  el.className = 'price-delta '+(d>0?'up':'down');
+}
+
+function resetAll(){
+  var df = {fan:6400,bottom:6800,exrate:6.75,margin:10000,depre:1.0,pumpe:1580};
+  Object.keys(df).forEach(function(k){state[k]=df[k];});
+  state.innerGSMDeltas = new Array(SKUS.length).fill(0);
+  state.printGSMDeltas = new Array(SKUS.length).fill(0);
+  state.kraftGSMDeltas = new Array(SKUS.length).fill(0);
+  state.extraColors = 1;
+  document.getElementById('skuSel').value = 0;
+  state.skuIdx = 0;
+  PARAMS.forEach(function(p){document.getElementById('pv_'+p.key).value = df[p.key];});
+  document.getElementById('togWhite').checked = false;
+  document.getElementById('tog20gp').checked = false;
+  document.getElementById('togColor').checked = false;
+  document.getElementById('colorCountRow').style.display = 'none';
+  document.getElementById('colorCount').textContent = '1';
+  updateSingleGSMRow();
+  onSkuChange();
+}
+</script>
+</body>
+</html>
