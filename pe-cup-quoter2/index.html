@@ -1,0 +1,629 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="theme-color" content="#1a73e8">
+<link rel="manifest" href="manifest.json">
+<title>PE Cup Quoter 2026</title>
+<style>
+:root{
+  --blue:#1a73e8;--blue2:#1557b0;--green:#0f9d58;--orange:#e8a000;
+  --red:#d93025;--bg:#f8f9fa;--card:#fff;--border:#dadce0;
+  --text:#202124;--sub:#5f6368;--price-bg:#e8f0fe;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+body{font-family:'Segoe UI',Arial,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;}
+
+/* TOP BAR */
+.topbar{background:var(--blue);color:#fff;padding:12px 16px;display:flex;align-items:center;gap:10px;position:sticky;top:0;z-index:100;box-shadow:0 2px 6px rgba(0,0,0,.3);}
+.topbar-icon{font-size:22px;}
+.topbar h1{font-size:17px;font-weight:600;flex:1;}
+.topbar-reset{background:rgba(255,255,255,.2);border:none;color:#fff;padding:6px 12px;border-radius:20px;font-size:13px;cursor:pointer;}
+.topbar-reset:active{background:rgba(255,255,255,.35);}
+
+/* TABS */
+.tabs{display:flex;background:#fff;border-bottom:2px solid var(--border);position:sticky;top:52px;z-index:99;}
+.tab{flex:1;padding:10px 4px;text-align:center;font-size:13px;font-weight:500;color:var(--sub);cursor:pointer;border-bottom:3px solid transparent;transition:.2s;}
+.tab.active{color:var(--blue);border-bottom-color:var(--blue);}
+
+/* CONTAINER */
+.page{display:none;padding:12px;max-width:600px;margin:0 auto;}
+.page.active{display:block;}
+
+/* CARD */
+.card{background:var(--card);border-radius:12px;padding:14px;margin-bottom:12px;box-shadow:0 1px 3px rgba(0,0,0,.1);}
+.card-title{font-size:12px;font-weight:600;color:var(--sub);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px;}
+
+/* SKU SELECT */
+.sku-select{width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:15px;background:#fff;color:var(--text);appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M0 0l6 8 6-8z' fill='%235f6368'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;}
+.sku-dims{font-size:12px;color:var(--sub);margin-top:5px;padding:0 2px;}
+
+/* PARAM ROW */
+.param-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.param-item{background:#f1f3f4;border-radius:10px;padding:10px 12px;}
+.param-label{font-size:11px;color:var(--sub);margin-bottom:4px;font-weight:500;}
+.param-controls{display:flex;align-items:center;gap:6px;}
+.param-btn{width:32px;height:32px;border-radius:50%;border:1.5px solid var(--blue);background:#fff;color:var(--blue);font-size:18px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;font-weight:600;flex-shrink:0;}
+.param-btn:active{background:var(--price-bg);}
+.param-val{flex:1;text-align:center;font-size:15px;font-weight:600;color:var(--text);background:none;border:none;width:100%;outline:none;}
+input[type=number].param-val::-webkit-inner-spin-button,
+input[type=number].param-val::-webkit-outer-spin-button{-webkit-appearance:none;}
+
+/* SINGLE GSM ROW */
+.gsm-row{display:flex;align-items:center;gap:8px;background:#f1f3f4;border-radius:8px;padding:7px 10px;margin-top:8px;}
+.gsm-name{font-size:13px;font-weight:500;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.gsm-orig{font-size:11px;color:var(--sub);flex-shrink:0;}
+.gsm-btn{width:28px;height:28px;border-radius:50%;border:1.5px solid var(--blue);background:#fff;color:var(--blue);font-size:15px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-weight:600;flex-shrink:0;}
+.gsm-btn:active{background:var(--price-bg);}
+.gsm-val{width:48px;text-align:center;font-size:14px;font-weight:600;border:none;background:none;outline:none;}
+.gsm-delta{font-size:12px;min-width:34px;text-align:right;font-weight:500;}
+.gsm-delta.plus{color:var(--red);}
+.gsm-delta.minus{color:var(--green);}
+
+/* SURCHARGE TOGGLES */
+.toggle-list{display:flex;flex-direction:column;gap:8px;}
+.toggle-row{display:flex;align-items:center;justify-content:space-between;gap:8px;}
+.toggle-label{font-size:14px;flex:1;}
+.toggle-note{font-size:11px;color:var(--sub);}
+.toggle-switch{position:relative;width:44px;height:24px;flex-shrink:0;}
+.toggle-switch input{display:none;}
+.toggle-slider{position:absolute;inset:0;border-radius:24px;background:#ccc;cursor:pointer;transition:.3s;}
+.toggle-slider::before{content:'';position:absolute;width:18px;height:18px;border-radius:50%;background:#fff;left:3px;top:3px;transition:.3s;}
+.toggle-switch input:checked + .toggle-slider{background:var(--blue);}
+.toggle-switch input:checked + .toggle-slider::before{transform:translateX(20px);}
+
+/* COLOR COUNTER */
+.color-row{display:flex;align-items:center;gap:10px;}
+.color-label{font-size:14px;flex:1;}
+.color-ctrl{display:flex;align-items:center;gap:8px;}
+.color-count{font-size:15px;font-weight:600;min-width:24px;text-align:center;}
+
+/* PRICE DISPLAY */
+.price-board{background:linear-gradient(135deg,#1a73e8,#1557b0);border-radius:14px;padding:16px;margin-bottom:12px;color:#fff;}
+.price-board-title{font-size:12px;opacity:.85;margin-bottom:12px;text-align:center;text-transform:uppercase;letter-spacing:.5px;}
+.price-cols{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.price-col{background:rgba(255,255,255,.15);border-radius:10px;padding:12px 10px;text-align:center;}
+.price-col-label{font-size:11px;opacity:.85;margin-bottom:6px;}
+.price-amount{font-size:34px;font-weight:800;line-height:1;letter-spacing:-.5px;}
+.price-unit{font-size:11px;opacity:.75;margin-top:3px;}
+.price-delta{font-size:12px;margin-top:5px;padding:2px 8px;border-radius:10px;display:inline-block;}
+.price-delta.up{background:rgba(255,80,80,.3);color:#ffcdd2;}
+.price-delta.down{background:rgba(80,230,130,.3);color:#c8e6c9;}
+.price-delta.zero{display:none;}
+
+/* DETAIL TABLE */
+.detail-table{width:100%;border-collapse:collapse;font-size:13px;}
+.detail-table tr{border-bottom:1px solid var(--border);}
+.detail-table tr:last-child{border-bottom:none;}
+.detail-table td{padding:7px 4px;}
+.detail-table td:last-child{text-align:right;font-weight:500;}
+.detail-table .total-row td{font-weight:700;font-size:14px;color:var(--blue);}
+
+/* QTY TABLE */
+.qty-table{width:100%;border-collapse:collapse;font-size:13px;margin-top:8px;}
+.qty-table tr{border-bottom:1px solid var(--border);}
+.qty-table tr:last-child{border-bottom:none;}
+.qty-table td{padding:7px 4px;}
+.qty-table td:last-child{text-align:right;font-weight:500;}
+
+/* SURCHARGE PILLS */
+.surcharge-pills{display:flex;flex-wrap:wrap;gap:5px;margin-top:8px;}
+.pill{padding:3px 8px;border-radius:10px;font-size:11px;font-weight:500;}
+.pill.active{background:#e8f0fe;color:var(--blue);}
+.pill.inactive{background:#f1f3f4;color:var(--sub);}
+
+/* NOTES */
+.notes-list{list-style:none;padding:0;}
+.notes-list li{padding:8px 0;border-bottom:1px solid var(--border);font-size:13px;line-height:1.5;color:var(--sub);}
+.notes-list li:last-child{border-bottom:none;}
+.notes-list li b{color:var(--text);}
+
+/* Param section header with reset */
+.param-header{display:flex;justify-content:space-between;align-items:center;}
+.gsm-reset-btn{font-size:11px;color:var(--blue);background:none;border:none;cursor:pointer;padding:2px 6px;}
+
+/* RESPONSIVE */
+@media(max-width:360px){
+  .price-amount{font-size:28px;}
+  .param-grid{grid-template-columns:1fr;}
+}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <span class="topbar-icon">☕</span>
+  <h1>PE Cup Quoter 2026</h1>
+  <button class="topbar-reset" onclick="resetAll()">Reset</button>
+</div>
+
+<div class="tabs">
+  <div class="tab active" onclick="showTab(0)">Quote</div>
+  <div class="tab" onclick="showTab(1)">Detail</div>
+  <div class="tab" onclick="showTab(2)">Notes</div>
+</div>
+
+<!-- TAB 0: QUOTE -->
+<div class="page active" id="tab0">
+
+  <!-- SKU -->
+  <div class="card">
+    <div class="card-title">Select Item</div>
+    <select class="sku-select" id="skuSel" onchange="onSkuChange()"></select>
+    <div class="sku-dims" id="skuDims"></div>
+  </div>
+
+  <!-- PRICE BOARD -->
+  <div class="price-board">
+    <div class="price-board-title">FOB Price / Carton (USD)</div>
+    <div class="price-cols">
+      <div class="price-col">
+        <div class="price-col-label">🖨 Printed Cups</div>
+        <div class="price-amount" id="pricePrint">—</div>
+        <div class="price-unit">USD / ctn</div>
+        <div class="price-delta" id="deltaPrint"></div>
+      </div>
+      <div class="price-col">
+        <div class="price-col-label">⬜ White Cups</div>
+        <div class="price-amount" id="priceWhite">—</div>
+        <div class="price-unit">USD / ctn</div>
+        <div class="price-delta" id="deltaWhite"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- GLOBAL PARAMS -->
+  <div class="card">
+    <div class="card-title">Global Parameters</div>
+    <div class="param-grid" id="paramGrid"></div>
+    <!-- Single GSM row for selected SKU -->
+    <div class="param-header" style="margin-top:10px;">
+      <div class="card-title" style="margin-bottom:0;" id="gsmSkLabel">Fan GSM</div>
+      <button class="gsm-reset-btn" onclick="resetCurrentGSM()">Reset</button>
+    </div>
+    <div id="singleGSMRow"></div>
+  </div>
+
+  <!-- TOGGLES -->
+  <div class="card">
+    <div class="card-title">Options</div>
+    <div class="toggle-list">
+      <div class="toggle-row">
+        <div>
+          <div class="toggle-label">White Carton</div>
+          <div class="toggle-note">+$0.10 / ctn</div>
+        </div>
+        <label class="toggle-switch">
+          <input type="checkbox" id="togWhite" onchange="recalc()">
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+      <div class="toggle-row">
+        <div>
+          <div class="toggle-label">20GP (vs 40HQ)</div>
+          <div class="toggle-note" id="note20gp">Surcharge varies by size</div>
+        </div>
+        <label class="toggle-switch">
+          <input type="checkbox" id="tog20gp" onchange="recalc()">
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+      <div class="toggle-row">
+        <div>
+          <div class="toggle-label">Extra Print Color</div>
+          <div class="toggle-note" id="noteColor">+$0.10~0.20 per extra color</div>
+        </div>
+        <label class="toggle-switch">
+          <input type="checkbox" id="togColor" onchange="onColorToggle()">
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+      <div id="colorCountRow" style="display:none;" class="toggle-row">
+        <div class="color-label" style="font-size:13px;color:var(--sub)">Extra colors (beyond 3)</div>
+        <div class="color-ctrl">
+          <button class="param-btn" onclick="changeColor(-1)">−</button>
+          <div class="color-count" id="colorCount">1</div>
+          <button class="param-btn" onclick="changeColor(1)">+</button>
+        </div>
+      </div>
+    </div>
+    <div class="surcharge-pills" id="pillRow"></div>
+  </div>
+
+</div>
+
+<!-- TAB 1: COST DETAIL -->
+<div class="page" id="tab1">
+  <div class="card">
+    <div class="card-title">Cost Breakdown (RMB / ctn)</div>
+    <table class="detail-table" id="costTable"></table>
+  </div>
+  <div class="card">
+    <div class="card-title">Container Quantity</div>
+    <table class="qty-table" id="qtyTable"></table>
+  </div>
+</div>
+
+<!-- TAB 2: NOTES -->
+<div class="page" id="tab2">
+  <div class="card">
+    <div class="card-title">Pricing Notes</div>
+    <ul class="notes-list">
+      <li><b>Packing:</b> Base price on yellow carton. White carton: <b>+US$0.10/ctn</b></li>
+      <li><b>Container:</b> Base price on 40HQ. If 20GP: 4oz <b>+$0.20</b> / 5-7oz <b>+$0.30</b> / 8oz <b>+$0.40</b> / 9-32oz <b>+$0.50</b> /ctn</li>
+      <li><b>Printing:</b> Base on 1–3 colors. Each extra color: 3–9oz <b>+$0.10</b> / 10–32oz <b>+$0.20</b> /ctn</li>
+      <li><b>Fan GSM:</b> Each ±10 gsm adjusts paper cost by ratio. Modify directly in the GSM row on the Quote page.</li>
+      <li><b>Fan/Bottom price:</b> RMB per ton. Affects paper cost directly.</li>
+    </ul>
+  </div>
+  <div class="card">
+    <div class="card-title">Formula</div>
+    <ul class="notes-list">
+      <li>Paper cost = (fan_area × fan_gsm × fan_price + bottom_area × bottom_gsm × bottom_price) / 10¹² × pcs/ctn</li>
+      <li>Cost/Print ctn = Paper + Print-Cut + Form-Pack-Trans + Depre + PumpE/qty_40HC</li>
+      <li>Cost/White ctn = Paper + Form-Pack-Trans + Depre + PumpE/qty_40HC + Gap</li>
+      <li>Price = Cost / ExRate + Margin / (qty_40HC × ExRate)</li>
+    </ul>
+  </div>
+  <div class="card" style="text-align:center;padding:18px;">
+    <div style="font-size:13px;color:var(--sub)">Juxian Hengyu Flying Dragon Industry</div>
+    <div style="font-size:12px;color:var(--sub);margin-top:4px;">PE Cup Quoter v2.1 · 2026</div>
+  </div>
+</div>
+
+<script>
+// ─── SKU DATA ─────────────────────────────────────────────────────────────────
+const SKUS_RAW = [
+  {n:"3oz",d:[57.0,40.0,60.0],fg:170,bg:190,cp0:19.7481,pc:1.67,fp:8.6406,dc0:3.0215,wg:0.9719,pp:5.4125,pw:5.3091,q2:1365,q4:3352.5,pm0:11295313642.64,fa:9142.0346,ba:1256.6371,oz:3.0,pcsDisp:1000},
+  {n:"4oz",d:[62.0,46.0,62.0],fg:210,bg:190,cp0:25.1989,pc:1.3309,fp:10.0226,dc0:3.9608,wg:0.3803,pp:6.6952,pw:6.5544,q2:1007,q4:2474.5,pm0:15904680375.14,fa:10518.0522,ba:1661.9025,oz:4.0,pcsDisp:1000},
+  {n:"5oz",d:[62.0,46.0,80.0],fg:210,bg:190,cp0:29.9138,pc:2.29,fp:10.4621,dc0:3.9608,wg:0.5922,pp:7.6756,pw:7.4241,q2:923,q4:2233.9,pm0:19944630297.58,fa:13571.6803,ba:1661.9025,oz:5.0,pcsDisp:1000},
+  {n:"6ozA-1000",d:[70.0,46.0,80.0],fg:210,bg:190,cp0:31.9694,pc:1.2824,fp:10.2351,dc0:5.0745,wg:0.4275,pp:8.141,pw:8.0143,q2:738,q4:1812.2,pm0:21274654963.4,fa:14576.9899,ba:1661.9025,oz:6.0,pcsDisp:1000},
+  {n:"6ozA-2500",d:[70.0,46.0,80.0],fg:210,bg:190,cp0:79.9236,pc:3.2059,fp:21.3408,dc0:12.6863,wg:1.0686,pp:19.4903,pw:19.1737,q2:340,q4:804.0,pm0:21274654963.4,fa:14576.9899,ba:1661.9025,oz:6.0,pcsDisp:2500},
+  {n:"6ozA-3000",d:[70.0,46.0,80.0],fg:210,bg:190,cp0:95.9083,pc:3.8471,fp:24.1342,dc0:15.2235,wg:1.2824,pp:22.9594,pw:22.5795,q2:294,q4:730.0,pm0:21274654963.4,fa:14576.9899,ba:1661.9025,oz:6.0,pcsDisp:3000},
+  {n:"6ozB-1000",d:[70.0,46.0,80.0],fg:210,bg:190,cp0:32.1776,pc:1.2923,fp:9.7019,dc0:5.1076,wg:0.4308,pp:7.9329,pw:7.8052,q2:895,q4:2198.4,pm0:21274654963.4,fa:14576.9899,ba:1661.9025,oz:6.0,pcsDisp:1000},
+  {n:"6ozB-2500",d:[70.0,46.0,80.0],fg:210,bg:190,cp0:79.9236,pc:3.2307,fp:19.641,dc0:12.7689,wg:1.0769,pp:18.8802,pw:18.5611,q2:423,q4:975.0,pm0:21274654963.4,fa:14576.9899,ba:1661.9025,oz:6.0,pcsDisp:2500},
+  {n:"6ozB-3000",d:[70.0,46.0,80.0],fg:210,bg:190,cp0:95.9083,pc:3.8769,fp:22.4953,dc0:15.3227,wg:1.2923,pp:22.3805,pw:21.9976,q2:356,q4:860.0,pm0:21274654963.4,fa:14576.9899,ba:1661.9025,oz:6.0,pcsDisp:3000},
+  {n:"6.5oz",d:[70.0,46.0,85.0],fg:210,bg:190,cp0:33.7069,pc:1.3651,fp:10.8351,dc0:5.3503,wg:0.455,pp:8.5404,pw:8.4055,q2:738,q4:1812.2,pm0:22479989816.81,fa:15488.0518,ba:1661.9025,oz:6.5,pcsDisp:1000},
+  {n:"7ozA",d:[73.0,52.0,77.0],fg:260,bg:190,cp0:41.538,pc:1.6324,fp:10.5938,dc0:6.5933,wg:0.5441,pp:9.9069,pw:9.7456,q2:724,q4:1777.8,pm0:27306870999.86,fa:15118.9146,ba:2123.7166,oz:7.0,pcsDisp:1000},
+  {n:"7ozB-1000",d:[70.0,46.0,92.0],fg:210,bg:190,cp0:34.948,pc:1.4341,fp:10.2351,dc0:5.5473,wg:0.478,pp:8.6748,pw:8.5331,q2:738,q4:1812.2,pm0:24167458611.57,fa:16763.5384,ba:1661.9025,oz:7.0,pcsDisp:1000},
+  {n:"7ozB-2500",d:[70.0,46.0,92.0],fg:210,bg:190,cp0:87.3701,pc:3.5851,fp:21.3408,dc0:5.5473,wg:1.195,pp:19.592,pw:19.238,q2:340,q4:804.0,pm0:24167458611.57,fa:16763.5384,ba:1661.9025,oz:7.0,pcsDisp:2500},
+  {n:"8ozA",d:[80.0,57.0,90.0],fg:260,bg:210,cp0:50.3581,pc:1.6965,fp:13.6796,dc0:8.0425,wg:0.6786,pp:12.3428,pw:12.192,q2:502,q4:1214.2,pm0:35100627517.26,fa:19367.9187,ba:2551.7586,oz:8.0,pcsDisp:1000},
+  {n:"8ozB",d:[81.0,56.0,90.0],fg:280,bg:210,cp0:54.1894,pc:1.8544,fp:14.4998,dc0:8.6015,wg:0.7418,pp:13.3939,pw:13.2291,q2:425,q4:1028.1,pm0:37423569034.62,fa:19367.9187,ba:2463.0086,oz:8.0,pcsDisp:1000},
+  {n:"8ozD",d:[76.0,52.0,94.0],fg:280,bg:210,cp0:51.5777,pc:1.7907,fp:13.1456,dc0:8.1869,wg:0.7163,pp:12.3131,pw:12.1539,q2:569,q4:1376.5,pm0:36148962063.2,fa:18899.8214,ba:2123.7166,oz:8.0,pcsDisp:1000},
+  {n:"9ozC",d:[73.0,48.0,102.0],fg:210,bg:210,cp0:37.9777,pc:1.6272,fp:11.418,dc0:6.2435,wg:0.5424,pp:9.5033,pw:9.3426,q2:676,q4:1683.0,pm0:28042738813.48,fa:19386.7683,ba:1809.5574,oz:9.0,pcsDisp:1000},
+  {n:"9ozA",d:[75.0,52.0,85.0],fg:250,bg:210,cp0:45.7648,pc:1.8116,fp:11.5259,dc0:7.2767,wg:0.6039,pp:10.8869,pw:10.708,q2:663,q4:1629.2,pm0:29516552604.26,fa:16956.7463,ba:2123.7166,oz:9.0,pcsDisp:1000},
+  {n:"9ozB",d:[72.0,42.0,116.0],fg:190,bg:190,cp0:41.0524,pc:1.7653,fp:11.9059,dc0:6.5344,wg:0.5802,pp:10.2468,pw:10.0713,q2:605,q4:1464.3,pm0:26522710623.97,fa:20772.2106,ba:1385.4424,oz:9.0,pcsDisp:1000},
+  {n:"10ozA",d:[90.0,60.0,95.0],fg:320,bg:210,cp0:71.8995,pc:2.4845,fp:17.4708,dc0:11.4126,wg:0.5466,pp:17.4732,pw:17.1861,q2:322,q4:789.0,pm0:48866531248.79,fa:22383.8477,ba:2827.4334,oz:10.0,pcsDisp:1000},
+  {n:"12ozA",d:[90.0,60.0,111.0],fg:320,bg:210,cp0:79.562,pc:2.7885,fp:17.5708,dc0:12.6289,wg:0.6135,pp:18.8484,pw:18.5262,q2:322,q4:789.0,pm0:56466672196.36,fa:26153.7588,ba:2827.4334,oz:12.0,pcsDisp:1000},
+  {n:"12ozE",d:[80.0,51.0,116.0],fg:280,bg:210,cp0:63.8872,pc:2.2233,fp:14.3806,dc0:10.0361,wg:0.9782,pp:15.043,pw:14.8585,q2:434,q4:1051.5,pm0:44809015896.43,fa:23869.821,ba:2042.8206,oz:12.0,pcsDisp:1000},
+  {n:"16ozA",d:[90.0,60.0,136.0],fg:320,bg:210,cp0:91.7224,pc:3.2678,fp:18.1708,dc0:14.682,wg:0.7843,pp:21.1141,pw:20.7461,q2:322,q4:789.0,pm0:68341892426.93,fa:32044.2451,ba:2827.4334,oz:16.0,pcsDisp:1000},
+  {n:"20oz",d:[90.0,60.0,150.0],fg:320,bg:210,cp0:106.7784,pc:3.8198,fp:22.6598,dc0:16.949,wg:1.6807,pp:25.0476,pw:24.7307,q2:250,q4:613.9,pm0:74992015756.05,fa:35342.9174,ba:2827.4334,oz:20.0,pcsDisp:1000},
+  {n:"22oz",d:[90.0,62.0,168.0],fg:320,bg:210,cp0:118.9685,pc:5.9218,fp:34.5586,dc0:18.8839,wg:1.5837,pp:29.0893,pw:28.4466,q2:262,q4:642.6,pm0:84859730006.64,fa:40111.855,ba:3019.0705,oz:22.0,pcsDisp:1000},
+  {n:"32oz",d:[105.0,73.0,170.0],fg:320,bg:210,cp0:138.5315,pc:7.2004,fp:39.5529,dc0:21.9891,wg:0.001,pp:34.3108,pw:33.2442,q2:197,q4:476.1,pm0:101362377200.47,fa:47532.2968,ba:4185.3868,oz:32.0,pcsDisp:1000}
+];
+
+// ─── STATE ────────────────────────────────────────────────────────────────────
+let state = {
+  fan: 6300, bottom: 6300, exrate: 6.75, margin: 10000, depre: 1.0, pumpe: 1580,
+  skuIdx: 0,
+  gsmDeltas: new Array(SKUS_RAW.length).fill(0),
+  extraColors: 1,
+};
+
+const PARAMS = [
+  {key:'fan',  label:'Fan ¥/t',  step:50,  decimals:0, min:1000, max:20000},
+  {key:'bottom',label:'Bottom ¥/t',step:50,  decimals:0, min:1000, max:20000},
+  {key:'exrate',label:'ExRate',step:0.05,decimals:2, min:1,    max:20},
+  {key:'margin',label:'Margin ¥',step:1000,decimals:0, min:0,    max:200000},
+  {key:'depre', label:'Depre', step:0.1, decimals:1, min:0,    max:10},
+  {key:'pumpe', label:'PumpE ¥', step:100, decimals:0, min:0,    max:50000},
+];
+
+// ─── TAB SWITCH ───────────────────────────────────────────────────────────────
+function showTab(idx){
+  document.querySelectorAll('.tab').forEach(function(t,i){t.classList.toggle('active',i===idx);});
+  document.querySelectorAll('.page').forEach(function(p,i){p.classList.toggle('active',i===idx);});
+}
+
+// ─── INIT ─────────────────────────────────────────────────────────────────────
+window.onload = function(){
+  buildSkuSelect();
+  buildParamGrid();
+  buildSingleGSMRow();
+  onSkuChange();
+  if('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js');
+};
+
+function buildSkuSelect(){
+  const sel = document.getElementById('skuSel');
+  sel.innerHTML = '';
+  SKUS_RAW.forEach(function(s,i){
+    var opt = document.createElement('option');
+    opt.value = i;
+    opt.textContent = s.n + '  (' + s.d[0]+'×'+s.d[1]+'×'+s.d[2]+' mm)';
+    sel.appendChild(opt);
+  });
+}
+
+function buildParamGrid(){
+  var grid = document.getElementById('paramGrid');
+  grid.innerHTML = '';
+  PARAMS.forEach(function(p){
+    var item = document.createElement('div');
+    item.className = 'param-item';
+    item.innerHTML =
+      '<div class="param-label">'+p.label+'</div>'+
+      '<div class="param-controls">'+
+        '<button class="param-btn" onclick="changeParam(\''+p.key+'\',-1)">−</button>'+
+        '<input type="number" class="param-val" id="pv_'+p.key+'"'+
+          ' value="'+state[p.key]+'"'+
+          ' step="'+p.step+'" min="'+p.min+'" max="'+p.max+'"'+
+          ' onchange="onParamInput(\''+p.key+'\',this.value)">'+
+        '<button class="param-btn" onclick="changeParam(\''+p.key+'\',1)">+</button>'+
+      '</div>';
+    grid.appendChild(item);
+  });
+}
+
+function buildSingleGSMRow(){
+  var row = document.getElementById('singleGSMRow');
+  row.innerHTML = '<div class="gsm-row" id="gsmRowContent" style="display:none;"></div>';
+}
+
+function updateSingleGSMRow(){
+  var idx = state.skuIdx;
+  var s = SKUS_RAW[idx];
+  var newGSM = s.fg + state.gsmDeltas[idx];
+  var d = state.gsmDeltas[idx];
+  var labelEl = document.getElementById('gsmSkLabel');
+  labelEl.textContent = 'Fan GSM — ' + s.n;
+  var content = document.getElementById('gsmRowContent');
+  content.style.display = 'flex';
+  content.innerHTML =
+    '<div class="gsm-name">'+s.n+'</div>'+
+    '<div class="gsm-orig">orig: '+s.fg+'</div>'+
+    '<button class="gsm-btn" onclick="changeGSM(-10)">−</button>'+
+    '<input type="number" class="gsm-val" id="gsmv_cur" value="'+newGSM+'" onchange="onGSMInput(this.value)">'+
+    '<button class="gsm-btn" onclick="changeGSM(10)">+</button>'+
+    '<div class="gsm-delta'+(d>0?' plus':d<0?' minus':'')+'" id="gsmd_cur">'+(d===0?'—':(d>0?'+':'')+d)+'</div>';
+}
+
+// ─── EVENTS ───────────────────────────────────────────────────────────────────
+function onSkuChange(){
+  state.skuIdx = parseInt(document.getElementById('skuSel').value);
+  var s = SKUS_RAW[state.skuIdx];
+  document.getElementById('skuDims').textContent =
+    'Dims: '+s.d[0]+'×'+s.d[1]+'×'+s.d[2]+' mm  |  Fan: '+s.fg+' gsm  |  Bottom: '+s.bg+' gsm  |  '+s.pcsDisp+' pcs/ctn';
+  update20GPNote();
+  updateColorNote();
+  updateSingleGSMRow();
+  recalc();
+}
+
+function changeParam(key, dir){
+  var p = PARAMS.find(function(x){return x.key===key;});
+  var step = p.step;
+  var val = state[key] + dir * step;
+  val = Math.max(p.min, Math.min(p.max, parseFloat(val.toFixed(p.decimals+2))));
+  state[key] = parseFloat(val.toFixed(p.decimals));
+  document.getElementById('pv_'+key).value = state[key];
+  recalc();
+}
+
+function onParamInput(key, rawVal){
+  var p = PARAMS.find(function(x){return x.key===key;});
+  var val = parseFloat(rawVal);
+  if(isNaN(val)) return;
+  val = Math.max(p.min, Math.min(p.max, val));
+  state[key] = parseFloat(val.toFixed(p.decimals));
+  document.getElementById('pv_'+key).value = state[key];
+  recalc();
+}
+
+function changeGSM(delta){
+  var i = state.skuIdx;
+  var s = SKUS_RAW[i];
+  var newGsm = s.fg + state.gsmDeltas[i] + delta;
+  if(newGsm < 50 || newGsm > 600) return;
+  state.gsmDeltas[i] += delta;
+  updateSingleGSMRow();
+  recalc();
+}
+
+function onGSMInput(rawVal){
+  var i = state.skuIdx;
+  var s = SKUS_RAW[i];
+  var val = parseInt(rawVal);
+  if(isNaN(val)) return;
+  val = Math.max(50, Math.min(600, val));
+  state.gsmDeltas[i] = val - s.fg;
+  updateSingleGSMRow();
+  recalc();
+}
+
+function resetCurrentGSM(){
+  state.gsmDeltas[state.skuIdx] = 0;
+  updateSingleGSMRow();
+  recalc();
+}
+
+function onColorToggle(){
+  var on = document.getElementById('togColor').checked;
+  document.getElementById('colorCountRow').style.display = on ? 'flex' : 'none';
+  recalc();
+}
+
+function changeColor(dir){
+  state.extraColors = Math.max(1, Math.min(10, state.extraColors + dir));
+  document.getElementById('colorCount').textContent = state.extraColors;
+  recalc();
+}
+
+function update20GPNote(){
+  var s = SKUS_RAW[state.skuIdx];
+  var add = calc20GPSurcharge(s.oz);
+  document.getElementById('note20gp').textContent =
+    '+$'+add.toFixed(2)+'/ctn for '+s.oz+'oz';
+}
+
+function updateColorNote(){
+  var s = SKUS_RAW[state.skuIdx];
+  var rate = getColorRate(s.oz);
+  document.getElementById('noteColor').textContent = '+$'+rate.toFixed(2)+' per extra color/ctn';
+}
+
+function get20GPSurcharge(oz){
+  if(oz<=3) return 0;
+  if(oz<=3.9) return 0.2;
+  if(oz<=7.9) return oz<=3.9?0.2:(oz<=4.9?0.2:0.3);
+  if(oz<=8.9) return 0.4;
+  return 0.5;
+}
+
+function calc20GPSurcharge(oz){
+  if(oz<=3) return 0;
+  if(oz<5) return 0.2;
+  if(oz<8) return 0.3;
+  if(oz<9) return 0.4;
+  return 0.5;
+}
+
+function getColorRate(oz){
+  return oz < 10 ? 0.10 : 0.20;
+}
+
+// ─── CALCULATE ────────────────────────────────────────────────────────────────
+function recalc(){
+  var idx = state.skuIdx;
+  var s = SKUS_RAW[idx];
+  var fan = state.fan, bottom = state.bottom, exrate = state.exrate;
+  var margin = state.margin, depre = state.depre, pumpe = state.pumpe;
+  var currentFanGSM = s.fg + state.gsmDeltas[idx];
+
+  // Paper cost via ratio
+  var origMetric = s.pm0;
+  var newMetric = s.fa * currentFanGSM * fan + s.ba * s.bg * bottom;
+  var paperRatio = newMetric / origMetric;
+  var costPaper = s.cp0 * paperRatio;
+
+  // Depreciation & PumpE per ctn
+  var depreCtn = s.dc0 * depre;
+  var pumpCtn = pumpe / s.q4;
+
+  // Cost per carton (RMB)
+  var costPrintRMB = costPaper + s.pc + s.fp + depreCtn + pumpCtn;
+  var costWhiteRMB = costPaper + s.fp + depreCtn + pumpCtn + s.wg;
+
+  // Margin per carton (USD)
+  var marginCtn = margin / (s.q4 * exrate);
+
+  // Base price (USD)
+  var basePrint = costPrintRMB / exrate + marginCtn;
+  var baseWhite = costWhiteRMB / exrate + marginCtn;
+
+  // Surcharges
+  var whiteSurcharge = document.getElementById('togWhite').checked ? 0.1 : 0;
+  var gpSurcharge = document.getElementById('tog20gp').checked ? calc20GPSurcharge(s.oz) : 0;
+  var colorOn = document.getElementById('togColor').checked;
+  var colorSurcharge = colorOn ? state.extraColors * getColorRate(s.oz) : 0;
+  var totalSurcharge = whiteSurcharge + gpSurcharge + colorSurcharge;
+
+  var finalPrint = basePrint + totalSurcharge;
+  var finalWhite = baseWhite + totalSurcharge;
+
+  // Display prices
+  document.getElementById('pricePrint').textContent = finalPrint.toFixed(2);
+  document.getElementById('priceWhite').textContent = finalWhite.toFixed(2);
+
+  // Deltas vs original
+  var dP = finalPrint - s.pp;
+  var dW = finalWhite - s.pw;
+  setDelta('deltaPrint', dP);
+  setDelta('deltaWhite', dW);
+
+  // Cost detail table
+  var tbody = document.getElementById('costTable');
+  tbody.innerHTML = '';
+  var rows = [
+    ['Paper Cost (RMB)', costPaper.toFixed(2)+' RMB'],
+    ['Print-Cut (RMB)', s.pc.toFixed(2)+' RMB'],
+    ['Form-Pack-Trans (RMB)', s.fp.toFixed(2)+' RMB'],
+    ['Depreciation (RMB)', depreCtn.toFixed(2)+' RMB'],
+    ['PumpE/ctn (RMB)', pumpCtn.toFixed(2)+' RMB'],
+    ['-- Print Cost / ctn (RMB)', costPrintRMB.toFixed(2)+' RMB'],
+    ['-- White Cost / ctn (RMB)', costWhiteRMB.toFixed(2)+' RMB'],
+    ['Margin / ctn (USD)', '+$'+marginCtn.toFixed(4)],
+    ['Surcharges', totalSurcharge > 0 ? '+$'+totalSurcharge.toFixed(2) : '-'],
+  ];
+  rows.forEach(function(r){
+    var l = r[0], v = r[1];
+    var tr = document.createElement('tr');
+    if(l.indexOf('--')===0){tr.style.fontWeight='600';tr.style.color='#1a73e8';}
+    tr.innerHTML = '<td>'+l.replace('-- ','')+'</td><td>'+v+'</td>';
+    tbody.appendChild(tr);
+  });
+
+  // Pills
+  var pills = document.getElementById('pillRow');
+  pills.innerHTML = '';
+  var pillDefs = [
+    {label:'White Box', active: document.getElementById('togWhite').checked},
+    {label:'20GP', active: document.getElementById('tog20gp').checked},
+    {label: colorOn ? state.extraColors+' extra color'+(state.extraColors>1?'s':'') : 'Extra Color', active: colorOn},
+    {label:'GSM Δ: '+(state.gsmDeltas[idx]>=0?'+':'')+state.gsmDeltas[idx], active: state.gsmDeltas[idx]!==0},
+  ];
+  pillDefs.forEach(function(p){
+    var span = document.createElement('span');
+    span.className = 'pill '+(p.active?'active':'inactive');
+    span.textContent = p.label;
+    pills.appendChild(span);
+  });
+
+  // Qty table
+  var qt = document.getElementById('qtyTable');
+  if(qt){
+    qt.innerHTML = '';
+    var qrows = [
+      ['40HQ', Math.round(s.q4)+' ctns'],
+      ['20GP', Math.round(s.q2)+' ctns'],
+      ['Pcs / Ctn', s.pcsDisp+' pcs'],
+    ];
+    qrows.forEach(function(r){
+      qt.innerHTML += '<tr><td>'+r[0]+'</td><td>'+r[1]+'</td></tr>';
+    });
+  }
+
+  update20GPNote();
+}
+
+function setDelta(id, d){
+  var el = document.getElementById(id);
+  if(Math.abs(d) < 0.001){el.textContent='';el.className='price-delta zero';return;}
+  el.textContent = 'Δ '+(d>0?'+':'')+d.toFixed(2);
+  el.className = 'price-delta '+(d>0?'up':'down');
+}
+
+function resetAll(){
+  var df = {fan:6300,bottom:6300,exrate:6.75,margin:10000,depre:1.0,pumpe:1580};
+  Object.keys(df).forEach(function(k){state[k]=df[k];});
+  state.gsmDeltas = new Array(SKUS_RAW.length).fill(0);
+  state.extraColors = 1;
+  document.getElementById('skuSel').value = 0;
+  state.skuIdx = 0;
+  // Reset params UI
+  PARAMS.forEach(function(p){document.getElementById('pv_'+p.key).value = df[p.key];});
+  // Reset toggles
+  document.getElementById('togWhite').checked = false;
+  document.getElementById('tog20gp').checked = false;
+  document.getElementById('togColor').checked = false;
+  document.getElementById('colorCountRow').style.display = 'none';
+  document.getElementById('colorCount').textContent = '1';
+  updateSingleGSMRow();
+  onSkuChange();
+}
+</script>
+</body>
+</html>
